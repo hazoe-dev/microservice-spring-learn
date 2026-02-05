@@ -63,9 +63,8 @@ public class QuizService {
                 size
         );
 
-        List<Question> questions =
-                questionRepo.findByCategoryIgnoreCase(category, pageable)
-                        .getContent();
+        Page<Question> page = questionRepo.findByCategoryIgnoreCase(category, pageable);
+        List<Question> questions = new ArrayList<>(page.getContent());
 
         Collections.shuffle(questions);
         return questions;
