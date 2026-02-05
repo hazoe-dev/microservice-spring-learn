@@ -7,9 +7,12 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
 
 
 @RestController
@@ -35,9 +38,37 @@ public class QuestionController {
     }
 
     @PostMapping("questions")
-    public ResponseEntity<Question> addQuestion(
+    public ResponseEntity<Void> addQuestion(
             @Valid @RequestBody CreatedQuestionRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(questionService.addQuestion(request));
+        Question q = questionService.addQuestion(request);
+        URI location = URI.create("/api/questions/" + q.getId());
+        return ResponseEntity.created(location).build();
+    }
+
+    @GetMapping("questions/{id}")
+    public ResponseEntity<Question> getQuestionById(
+            @PathVariable Long id
+    ) {
+        return ResponseEntity.ok(questionService.getQuestionById(id));
+    }
+
+    @DeleteMapping("questions/{id}")
+    public ResponseEntity<Void> deleteQuestionById(
+            @PathVariable Long id
+    ) {
+        questionService.deleteQuestionById(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("questions")
+    public ResponseEntity<Map<String, Object>> deleteQuestionsByTitle(
+            @RequestParam String title // support encode to avoid special characters
+    ) {
+        int deleted = questionService.deleteQuestionsByTitle(title);//title is not unique
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("deletedCount", deleted);
+        response.put("title", title);
+        return ResponseEntity.ok(response);
     }
 }
