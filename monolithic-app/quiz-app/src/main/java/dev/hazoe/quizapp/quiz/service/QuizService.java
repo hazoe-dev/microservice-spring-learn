@@ -10,12 +10,14 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 public class QuizService {
@@ -43,28 +45,32 @@ public class QuizService {
     }
 
     private List<Question> getQuestions(CreatedQuizRequest request) {
-        Page<Question> page = questionRepo
-                .findRandomQuestionsByCategory(
-                        request.category().trim().toLowerCase(),
-                        PageRequest.of(0, request.numOfQuestion()));
+        String category = request.category();
+        int size = request.numOfQuestion();
 
-        List<Question> questions = new ArrayList<>(page.getContent()); //avoid linked với persistence context
-
-        if (questions.isEmpty()) {
-            throw new ResourceNotFoundException(
-                    "No questions found for category: " + request.category()
-            );
-        }
-
-        if (questions.size() < request.numOfQuestion()) {
+        long count = questionRepo.countByCategoryIgnoreCase(category);
+        if (count < size) {
             throw new IllegalArgumentException(
-                    "Requested " + request.numOfQuestion() +
-                            " questions but only found " + questions.size()
+                    "Requested " + size + " questions but only found " + count
             );
         }
-        Collections.shuffle(questions); //random returned data
+
+        int randomOffset = ThreadLocalRandom.current()
+                .nextInt((int) (count - size + 1));
+
+        Pageable pageable = PageRequest.of(
+                randomOffset / size,
+                size
+        );
+
+        List<Question> questions =
+                questionRepo.findByCategoryIgnoreCase(category, pageable)
+                        .getContent();
+
+        Collections.shuffle(questions);
         return questions;
     }
+
 
     @Transactional(readOnly = true)
     public Quiz getQuizById(Long id) {

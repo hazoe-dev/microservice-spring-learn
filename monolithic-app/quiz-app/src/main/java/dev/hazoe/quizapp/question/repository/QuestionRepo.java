@@ -22,5 +22,7 @@ public interface QuestionRepo extends JpaRepository<Question, Long> {
     @Query("delete from Question q where lower(q.title) = lower(:title)")
     int deleteAllByTitleIgnoreCase(@Param("title") String title);
 
-    Page<Question> findRandomQuestionsByCategory(String category, Pageable pageable);
+    long countByCategoryIgnoreCase(String category);
+
+    Page<Question> findByCategoryIgnoreCase(String category, Pageable pageable);
 }
