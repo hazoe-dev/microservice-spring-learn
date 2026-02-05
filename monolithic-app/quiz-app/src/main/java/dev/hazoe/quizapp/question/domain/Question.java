@@ -13,6 +13,7 @@ import java.util.List;
 @ToString
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Entity
+@Builder
 @Table(name = "question")
 public class Question {
 
@@ -21,7 +22,7 @@ public class Question {
     @EqualsAndHashCode.Include
     private Long id;
 
-    private String name;
+    private String title;
 
     @ElementCollection
     @CollectionTable(
@@ -33,7 +34,9 @@ public class Question {
 
     private String answer;
 
-    private String level;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "varchar(20)")
+    private QuestionLevel level =  QuestionLevel.EASY;
 
     private String category;
 
@@ -49,10 +52,10 @@ public class Question {
         }
 
         Question q = new Question();
-        q.setName(name.trim());
+        q.setTitle(name.trim());
         q.setAnswer(answer.trim());
-        q.setLevel(level);
-        q.setCategory(category);
+        q.setLevel(QuestionLevel.from(level));
+        q.setCategory(category.trim().toLowerCase());
         q.setOptions(new ArrayList<>(options)); // defensive copy
 
         return q;
