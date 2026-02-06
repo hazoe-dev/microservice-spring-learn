@@ -5,6 +5,7 @@ import dev.hazoe.questionservice.question.domain.Question;
 import dev.hazoe.questionservice.question.dto.request.CreatedQuestionRequest;
 import dev.hazoe.questionservice.question.dto.response.QuestionSummaryResponse;
 import dev.hazoe.questionservice.question.repository.QuestionRepo;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -82,7 +83,7 @@ public class QuestionService {
         return deletedCount;
     }
 
-    public List<QuestionSummaryResponse> getRandomQuestions( String category, int size) {
+    public List<QuestionSummaryResponse> getRandomQuestions(String category, int size) {
         long count = questionRepo.countByCategoryIgnoreCase(category);
         if (count < size) {
             throw new IllegalArgumentException(
@@ -116,5 +117,9 @@ public class QuestionService {
         );
     }
 
-
+    public List<QuestionSummaryResponse> getQuestionsByIds(List<Long> ids) {
+        return questionRepo.findAllById(ids).stream()
+                .map(this::toSummary)
+                .toList();
+    }
 }

@@ -91,5 +91,17 @@ public class QuestionController {
         ));
     }
 
+    @GetMapping("/by-ids")
+    public ResponseEntity<List<QuestionSummaryResponse>> getQuestionsByIds(
+            @RequestParam List<Long> ids
+    ) {
+        List<QuestionSummaryResponse> result =
+                questionService.getQuestionsByIds(ids);
 
+        if (result.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+
+        return ResponseEntity.ok(result);
+    }
 }
