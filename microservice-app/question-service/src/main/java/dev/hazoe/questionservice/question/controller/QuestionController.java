@@ -2,7 +2,9 @@ package dev.hazoe.questionservice.question.controller;
 
 
 import dev.hazoe.questionservice.question.domain.Question;
-import dev.hazoe.questionservice.question.dto.CreatedQuestionRequest;
+import dev.hazoe.questionservice.question.dto.request.CreatedQuestionRequest;
+import dev.hazoe.questionservice.question.dto.request.RandomQuestionRequest;
+import dev.hazoe.questionservice.question.dto.response.QuestionSummaryResponse;
 import dev.hazoe.questionservice.question.service.QuestionService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,11 +16,12 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 
 @RestController
-@RequestMapping("api")
+@RequestMapping("api/questions")
 public class QuestionController {
 
     private QuestionService questionService;
@@ -28,7 +31,7 @@ public class QuestionController {
         this.questionService = questionService;
     }
 
-    @GetMapping("questions")
+    @GetMapping
     public ResponseEntity<Page<Question>> getQuestionsByCategory(
             @RequestParam(required = false) String category,
             Pageable pageable
@@ -39,7 +42,7 @@ public class QuestionController {
         return ResponseEntity.ok(questionService.getQuestionsByCategory(category, pageable));
     }
 
-    @PostMapping("questions")
+    @PostMapping
     public ResponseEntity<Void> addQuestion(
             @Valid @RequestBody CreatedQuestionRequest request) {
         Question q = questionService.addQuestion(request);
@@ -52,14 +55,14 @@ public class QuestionController {
         return ResponseEntity.created(location).build();
     }
 
-    @GetMapping("questions/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<Question> getQuestionById(
             @PathVariable Long id
     ) {
         return ResponseEntity.ok(questionService.getQuestionById(id));
     }
 
-    @DeleteMapping("questions/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteQuestionById(
             @PathVariable Long id
     ) {
@@ -67,7 +70,7 @@ public class QuestionController {
         return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping("questions")
+    @DeleteMapping
     public ResponseEntity<Map<String, Object>> deleteQuestionsByTitle(
             @RequestParam String title // support encode to avoid special characters
     ) {
@@ -78,4 +81,15 @@ public class QuestionController {
         response.put("title", title);
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/random")
+    public ResponseEntity<List<QuestionSummaryResponse>> getRandomQuestions(
+            @Valid @RequestBody RandomQuestionRequest request) {
+        return ResponseEntity.ok(questionService.getRandomQuestions(
+                request.category(),
+                request.size()
+        ));
+    }
+
+
 }

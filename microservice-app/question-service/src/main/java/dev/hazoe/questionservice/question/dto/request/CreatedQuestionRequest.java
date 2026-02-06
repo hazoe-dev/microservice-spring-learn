@@ -1,4 +1,4 @@
-package dev.hazoe.questionservice.question.dto;
+package dev.hazoe.questionservice.question.dto.request;
 
 
 import dev.hazoe.questionservice.question.domain.QuestionLevel;

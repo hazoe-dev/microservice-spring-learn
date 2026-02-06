@@ -2,13 +2,20 @@ package dev.hazoe.questionservice.question.service;
 
 import dev.hazoe.questionservice.exception.ResourceNotFoundException;
 import dev.hazoe.questionservice.question.domain.Question;
-import dev.hazoe.questionservice.question.dto.CreatedQuestionRequest;
+import dev.hazoe.questionservice.question.dto.request.CreatedQuestionRequest;
+import dev.hazoe.questionservice.question.dto.response.QuestionSummaryResponse;
 import dev.hazoe.questionservice.question.repository.QuestionRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 public class QuestionService {
@@ -74,4 +81,40 @@ public class QuestionService {
         }
         return deletedCount;
     }
+
+    public List<QuestionSummaryResponse> getRandomQuestions( String category, int size) {
+        long count = questionRepo.countByCategoryIgnoreCase(category);
+        if (count < size) {
+            throw new IllegalArgumentException(
+                    "Requested " + size + " questions but only found " + count
+            );
+        }
+
+        int randomOffset = ThreadLocalRandom.current()
+                .nextInt((int) (count - size + 1));
+
+        Pageable pageable = PageRequest.of(
+                randomOffset / size,
+                size
+        );
+
+        Page<Question> page = questionRepo.findByCategoryIgnoreCase(category, pageable);
+        List<Question> questions = new ArrayList<>(page.getContent());
+
+        Collections.shuffle(questions);
+        return questions.stream()
+                .map(this::toSummary)
+                .toList();
+    }
+
+    private QuestionSummaryResponse toSummary(Question q) {
+        return new QuestionSummaryResponse(
+                q.getId(),
+                q.getTitle(),
+                q.getOptions(),
+                q.getLevel().name()
+        );
+    }
+
+
 }
