@@ -2,6 +2,7 @@ package dev.hazoe.quizapp.quiz.controller;
 
 import dev.hazoe.quizapp.quiz.domain.Quiz;
 import dev.hazoe.quizapp.quiz.dto.CreatedQuizRequest;
+import dev.hazoe.quizapp.quiz.dto.QuizQuestionResponse;
 import dev.hazoe.quizapp.quiz.service.QuizService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.List;
 
 @RestController
 @RequestMapping("api")
@@ -34,4 +36,9 @@ public class QuizController {
         return ResponseEntity.created(location).build();
     }
 
+    @GetMapping("quiz/{id}/questions")
+    public ResponseEntity<List<QuizQuestionResponse>> getQuestionsByQuizId(
+            @PathVariable Long id) {
+        return ResponseEntity.ok(quizService.getQuestionsByQuizId(id));
+    }
 }

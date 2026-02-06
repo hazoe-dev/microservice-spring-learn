@@ -5,8 +5,8 @@ import dev.hazoe.quizapp.question.domain.Question;
 import dev.hazoe.quizapp.question.repository.QuestionRepo;
 import dev.hazoe.quizapp.quiz.domain.Quiz;
 import dev.hazoe.quizapp.quiz.dto.CreatedQuizRequest;
+import dev.hazoe.quizapp.quiz.dto.QuizQuestionResponse;
 import dev.hazoe.quizapp.quiz.repository.QuizRepo;
-import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -77,5 +77,21 @@ public class QuizService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Quiz not found with id: " + id)
                 );
+    }
+
+    @Transactional(readOnly = true)
+    public List<QuizQuestionResponse> getQuestionsByQuizId(Long quizId) {
+        Quiz quiz = quizRepo.findByIdWithQuestions(quizId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Quiz not found with id: " + quizId)
+                );
+        return quiz.getQuestions().stream()
+                .map(question -> new QuizQuestionResponse(
+                        question.getId(),
+                        question.getTitle(),
+                        question.getOptions(),
+                        question.getLevel()
+                ))
+                .toList();
     }
 }
