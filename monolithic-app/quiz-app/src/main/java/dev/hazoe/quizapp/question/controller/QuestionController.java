@@ -1,0 +1,80 @@
+package dev.hazoe.quizapp.question.controller;
+
+import dev.hazoe.quizapp.question.domain.Question;
+import dev.hazoe.quizapp.question.dto.CreatedQuestionRequest;
+import dev.hazoe.quizapp.question.service.QuestionService;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
+
+
+@RestController
+@RequestMapping("api")
+public class QuestionController {
+
+    private QuestionService questionService;
+
+    @Autowired
+    public QuestionController(QuestionService questionService) {
+        this.questionService = questionService;
+    }
+
+    @GetMapping("questions")
+    public ResponseEntity<Page<Question>> getQuestionsByCategory(
+            @RequestParam(required = false) String category,
+            Pageable pageable
+    ) {
+        if (category == null || category.isEmpty()) {
+            return ResponseEntity.ok(questionService.getAllQuestions(pageable));
+        }
+        return ResponseEntity.ok(questionService.getQuestionsByCategory(category, pageable));
+    }
+
+    @PostMapping("questions")
+    public ResponseEntity<Void> addQuestion(
+            @Valid @RequestBody CreatedQuestionRequest request) {
+        Question q = questionService.addQuestion(request);
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(q.getId())
+                .toUri();
+
+        return ResponseEntity.created(location).build();
+    }
+
+    @GetMapping("questions/{id}")
+    public ResponseEntity<Question> getQuestionById(
+            @PathVariable Long id
+    ) {
+        return ResponseEntity.ok(questionService.getQuestionById(id));
+    }
+
+    @DeleteMapping("questions/{id}")
+    public ResponseEntity<Void> deleteQuestionById(
+            @PathVariable Long id
+    ) {
+        questionService.deleteQuestionById(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("questions")
+    public ResponseEntity<Map<String, Object>> deleteQuestionsByTitle(
+            @RequestParam String title // support encode to avoid special characters
+    ) {
+        int deleted = questionService.deleteQuestionsByTitle(title);//title is not unique
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("deletedCount", deleted);
+        response.put("title", title);
+        return ResponseEntity.ok(response);
+    }
+}
