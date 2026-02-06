@@ -22,14 +22,14 @@ public class QuestionDataInitializer implements CommandLineRunner {
         questionRepository.saveAll(List.of(
                 Question.of(
                         "What is Java?",
-                        "A programming language",
+                        0,
                         "EASY",
                         "PROGRAMMING",
                         List.of("Programming language", "Database", "Operating system")
                 ),
                 Question.of(
                         "What is PostgreSQL?",
-                        "A relational database",
+                        1,
                         "EASY",
                         "DATABASE",
                         List.of("NoSQL database", "Relational database", "Web server")
@@ -41,7 +41,7 @@ public class QuestionDataInitializer implements CommandLineRunner {
 
                 Question.of(
                         "What is JVM?",
-                        "Java Virtual Machine",
+                        1,
                         "EASY",
                         "JAVA",
                         List.of(
@@ -54,7 +54,7 @@ public class QuestionDataInitializer implements CommandLineRunner {
 
                 Question.of(
                         "Which keyword is used to inherit a class in Java?",
-                        "extends",
+                        2,
                         "EASY",
                         "JAVA",
                         List.of(
@@ -67,7 +67,7 @@ public class QuestionDataInitializer implements CommandLineRunner {
 
                 Question.of(
                         "What does the 'final' keyword mean in Java?",
-                        "Cannot be changed",
+                        1,
                         "MEDIUM",
                         "JAVA",
                         List.of(
@@ -84,7 +84,7 @@ public class QuestionDataInitializer implements CommandLineRunner {
 
                 Question.of(
                         "What is Python?",
-                        "A high-level programming language",
+                        2,
                         "EASY",
                         "PYTHON",
                         List.of(
@@ -97,7 +97,7 @@ public class QuestionDataInitializer implements CommandLineRunner {
 
                 Question.of(
                         "Which keyword is used to define a function in Python?",
-                        "def",
+                        2,
                         "EASY",
                         "PYTHON",
                         List.of(
@@ -110,7 +110,7 @@ public class QuestionDataInitializer implements CommandLineRunner {
 
                 Question.of(
                         "What is the output of len([1, 2, 3]) in Python?",
-                        "3",
+                        1,
                         "EASY",
                         "PYTHON",
                         List.of(

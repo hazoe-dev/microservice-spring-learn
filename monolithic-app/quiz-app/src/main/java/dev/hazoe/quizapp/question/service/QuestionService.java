@@ -32,7 +32,7 @@ public class QuestionService {
 
     @Transactional
     public Question addQuestion(CreatedQuestionRequest request) {
-        if (!request.options().contains(request.answer())) {
+        if (request.selectedOption() >= request.options().size()) {
             throw new IllegalArgumentException("Answer must be one of the options");
         }
 
@@ -40,7 +40,7 @@ public class QuestionService {
                 .builder()
                 .title(request.title().trim())
                 .category(request.category().trim().toLowerCase())
-                .answer(request.answer())
+                .correctOptionIndex(request.selectedOption())
                 .options(request.options())
                 .level(request.level())
                 .build();
@@ -51,7 +51,7 @@ public class QuestionService {
     @Transactional(readOnly = true)
     public Question getQuestionById(Long id) {
         return questionRepo.findById(id)
-                .orElseThrow(()->
+                .orElseThrow(() ->
                         new ResourceNotFoundException("Question not found with id: " + id)
                 );
     }

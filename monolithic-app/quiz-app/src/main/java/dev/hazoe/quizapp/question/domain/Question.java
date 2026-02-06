@@ -32,7 +32,7 @@ public class Question {
     @Column(name = "option_value")
     private List<String> options = new ArrayList<>();
 
-    private String answer;
+    Integer correctOptionIndex;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, columnDefinition = "varchar(20)")
@@ -42,7 +42,7 @@ public class Question {
 
     public static Question of(
             String name,
-            String answer,
+            Integer answerIndex,
             String level,
             String category,
             List<String> options
@@ -53,7 +53,7 @@ public class Question {
 
         Question q = new Question();
         q.setTitle(name.trim());
-        q.setAnswer(answer.trim());
+        q.setCorrectOptionIndex(answerIndex);
         q.setLevel(QuestionLevel.from(level));
         q.setCategory(category.trim().toLowerCase());
         q.setOptions(new ArrayList<>(options)); // defensive copy
