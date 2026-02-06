@@ -1,4 +1,4 @@
-package dev.hazoe.quizapp.quiz.dto;
+package dev.hazoe.quizapp.quiz.dto.response;
 
 import dev.hazoe.quizapp.question.domain.QuestionLevel;
 

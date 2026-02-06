@@ -1,8 +1,10 @@
 package dev.hazoe.quizapp.quiz.controller;
 
+import dev.hazoe.quizapp.quiz.dto.response.QuizResultResponse;
+import dev.hazoe.quizapp.quiz.dto.request.SubmitQuizRequest;
 import dev.hazoe.quizapp.quiz.domain.Quiz;
-import dev.hazoe.quizapp.quiz.dto.CreatedQuizRequest;
-import dev.hazoe.quizapp.quiz.dto.QuizQuestionResponse;
+import dev.hazoe.quizapp.quiz.dto.request.CreatedQuizRequest;
+import dev.hazoe.quizapp.quiz.dto.response.QuizQuestionResponse;
 import dev.hazoe.quizapp.quiz.service.QuizService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,5 +42,12 @@ public class QuizController {
     public ResponseEntity<List<QuizQuestionResponse>> getQuestionsByQuizId(
             @PathVariable Long id) {
         return ResponseEntity.ok(quizService.getQuestionsByQuizId(id));
+    }
+
+    @PostMapping("quizzes/{id}/submit") //REST pragmatic / task-oriented
+    public ResponseEntity<QuizResultResponse> submitQuiz(
+            @PathVariable Long id,
+            @Valid @RequestBody SubmitQuizRequest request) {
+        return ResponseEntity.ok(quizService.submitQuiz(id, request));
     }
 }

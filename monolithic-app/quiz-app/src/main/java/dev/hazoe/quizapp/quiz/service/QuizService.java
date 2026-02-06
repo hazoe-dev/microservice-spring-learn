@@ -2,10 +2,12 @@ package dev.hazoe.quizapp.quiz.service;
 
 import dev.hazoe.quizapp.common.exception.ResourceNotFoundException;
 import dev.hazoe.quizapp.question.domain.Question;
+import dev.hazoe.quizapp.quiz.dto.response.QuizResultResponse;
+import dev.hazoe.quizapp.quiz.dto.request.SubmitQuizRequest;
 import dev.hazoe.quizapp.question.repository.QuestionRepo;
 import dev.hazoe.quizapp.quiz.domain.Quiz;
-import dev.hazoe.quizapp.quiz.dto.CreatedQuizRequest;
-import dev.hazoe.quizapp.quiz.dto.QuizQuestionResponse;
+import dev.hazoe.quizapp.quiz.dto.request.CreatedQuizRequest;
+import dev.hazoe.quizapp.quiz.dto.response.QuizQuestionResponse;
 import dev.hazoe.quizapp.quiz.repository.QuizRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -14,13 +16,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 
 @Service
 public class QuizService {
+
+    public static final String QUIZ_NOT_FOUND_WITH_ID = "Quiz not found with id: ";
 
     private final QuizRepo quizRepo;
 
@@ -75,7 +78,7 @@ public class QuizService {
     public Quiz getQuizById(Long id) {
         return quizRepo.findById(id)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("Quiz not found with id: " + id)
+                        new ResourceNotFoundException(QUIZ_NOT_FOUND_WITH_ID + id)
                 );
     }
 
@@ -83,7 +86,7 @@ public class QuizService {
     public List<QuizQuestionResponse> getQuestionsByQuizId(Long quizId) {
         Quiz quiz = quizRepo.findByIdWithQuestions(quizId)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("Quiz not found with id: " + quizId)
+                        new ResourceNotFoundException(QUIZ_NOT_FOUND_WITH_ID + quizId)
                 );
         return quiz.getQuestions().stream()
                 .map(question -> new QuizQuestionResponse(
@@ -93,5 +96,40 @@ public class QuizService {
                         question.getLevel()
                 ))
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public QuizResultResponse submitQuiz(Long quizId, SubmitQuizRequest request) {
+        Quiz quiz = quizRepo.findByIdWithQuestions(quizId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(QUIZ_NOT_FOUND_WITH_ID + quizId)
+                );
+
+        Map<Long, Integer> answerMap = request.answers().stream()
+                .collect(Collectors.toMap(
+                        SubmitQuizRequest.AnswerRequest::questionId,
+                        SubmitQuizRequest.AnswerRequest::selectedOptionIndex
+                ));
+
+        int correctCount = 0;
+
+        for (Question question : quiz.getQuestions()) {
+            Integer selected = answerMap.get(question.getId());
+            if (selected != null && selected.equals(question.getCorrectOptionIndex())) {
+                correctCount++;
+            }
+        }
+
+        int total = quiz.getQuestions().size();
+
+        double score = total == 0 ? 0 : (correctCount * 100.0 / total);
+
+        return new QuizResultResponse(
+                quizId,
+                total,
+                correctCount,
+                score
+        );
+
     }
 }
