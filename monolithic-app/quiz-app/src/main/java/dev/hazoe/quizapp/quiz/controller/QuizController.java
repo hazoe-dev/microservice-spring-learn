@@ -23,12 +23,12 @@ public class QuizController {
         this.quizService = quizService;
     }
 
-    @GetMapping("quiz/{id}")
+    @GetMapping("quizzes/{id}")
     public ResponseEntity<Quiz> getQuizById(@PathVariable Long id) {
         return ResponseEntity.ok(quizService.getQuizById(id));
     }
 
-    @PostMapping("quiz")
+    @PostMapping("quizzes")
     public ResponseEntity<Void> createQuiz(
             @Valid @RequestBody CreatedQuizRequest request) {
         Quiz q = quizService.createQuiz(request);
@@ -36,7 +36,7 @@ public class QuizController {
         return ResponseEntity.created(location).build();
     }
 
-    @GetMapping("quiz/{id}/questions")
+    @GetMapping("quizzes/{id}/questions")
     public ResponseEntity<List<QuizQuestionResponse>> getQuestionsByQuizId(
             @PathVariable Long id) {
         return ResponseEntity.ok(quizService.getQuestionsByQuizId(id));
