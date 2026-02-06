@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.util.HashMap;
@@ -41,7 +42,12 @@ public class QuestionController {
     public ResponseEntity<Void> addQuestion(
             @Valid @RequestBody CreatedQuestionRequest request) {
         Question q = questionService.addQuestion(request);
-        URI location = URI.create("/api/questions/" + q.getId());
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(q.getId())
+                .toUri();
+
         return ResponseEntity.created(location).build();
     }
 
