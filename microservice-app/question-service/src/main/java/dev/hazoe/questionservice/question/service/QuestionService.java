@@ -3,37 +3,32 @@ package dev.hazoe.questionservice.question.service;
 import dev.hazoe.questionservice.exception.ResourceNotFoundException;
 import dev.hazoe.questionservice.question.domain.Question;
 import dev.hazoe.questionservice.question.dto.request.CreatedQuestionRequest;
+import dev.hazoe.questionservice.question.dto.request.ValidateAnswersRequest;
 import dev.hazoe.questionservice.question.dto.response.QuestionSummaryResponse;
+import dev.hazoe.questionservice.question.dto.response.ValidateAnswersResponse;
 import dev.hazoe.questionservice.question.repository.QuestionRepo;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
+@RequiredArgsConstructor
 public class QuestionService {
-    private QuestionRepo questionRepo;
+    private final QuestionRepo questionRepo;
 
-    @Autowired
-    public QuestionService(QuestionRepo questionRepo) {
-        this.questionRepo = questionRepo;
-    }
-
-
-    @Transactional(readOnly = true)
     public Page<Question> getAllQuestions(Pageable pageable) {
         return questionRepo.findAll(pageable);
     }
 
-    @Transactional(readOnly = true)
     public Page<Question> getQuestionsByCategory(String category, Pageable pageable) {
         return questionRepo.findByCategoryEqualsIgnoreCase(category, pageable);
     }
@@ -121,5 +116,35 @@ public class QuestionService {
         return questionRepo.findAllById(ids).stream()
                 .map(this::toSummary)
                 .toList();
+    }
+
+    @Transactional //QuestionCommandService
+    public ValidateAnswersResponse validateAnswers(ValidateAnswersRequest request) {
+        Map<Long, Integer> submitted = request.answers().stream()
+                .collect(Collectors.toMap(
+                        ValidateAnswersRequest.AnswerRequest::questionId,
+                        ValidateAnswersRequest.AnswerRequest::selectedOptionIndex
+                ));
+
+        List<Question> questions =
+                questionRepo.findAllById(submitted.keySet());
+
+        Map<Long, Boolean> detail = new HashMap<>();
+        int correct = 0;
+
+        for (Question q : questions) {
+            Integer selected = submitted.get(q.getId());
+            boolean isCorrect =
+                    selected != null && selected.equals(q.getCorrectOptionIndex());
+
+            detail.put(q.getId(), isCorrect);
+            if (isCorrect) correct++;
+        }
+
+        return new ValidateAnswersResponse(
+                questions.size(),
+                correct,
+                detail
+        );
     }
 }

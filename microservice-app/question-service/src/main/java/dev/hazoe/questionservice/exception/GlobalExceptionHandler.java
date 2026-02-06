@@ -2,8 +2,10 @@ package dev.hazoe.questionservice.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.Instant;
 import java.util.HashMap;
@@ -23,4 +25,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
     }
 
+    @ExceptionHandler({
+            MethodArgumentTypeMismatchException.class,
+            HttpMessageNotReadableException.class,
+            IllegalArgumentException.class
+    })
+    public ResponseEntity<String> handleBadRequest(Exception e) {
+        return ResponseEntity
+                .badRequest()
+                .body(e.getMessage());
+    }
 }

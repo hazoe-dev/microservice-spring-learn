@@ -4,7 +4,9 @@ package dev.hazoe.questionservice.question.controller;
 import dev.hazoe.questionservice.question.domain.Question;
 import dev.hazoe.questionservice.question.dto.request.CreatedQuestionRequest;
 import dev.hazoe.questionservice.question.dto.request.RandomQuestionRequest;
+import dev.hazoe.questionservice.question.dto.request.ValidateAnswersRequest;
 import dev.hazoe.questionservice.question.dto.response.QuestionSummaryResponse;
+import dev.hazoe.questionservice.question.dto.response.ValidateAnswersResponse;
 import dev.hazoe.questionservice.question.service.QuestionService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -104,4 +106,14 @@ public class QuestionController {
 
         return ResponseEntity.ok(result);
     }
+
+    @PostMapping("/validate") //submit something to be processed with complex body
+    public ResponseEntity<ValidateAnswersResponse> validateAnswers(
+            @RequestBody @Valid ValidateAnswersRequest request
+    ) {
+        return ResponseEntity.ok(
+                questionService.validateAnswers(request)
+        );
+    }
+
 }
