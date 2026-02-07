@@ -4,11 +4,15 @@ import dev.hazoe.quizservice.quiz.dto.request.RandomQuestionRequest;
 import dev.hazoe.quizservice.quiz.dto.request.ValidateAnswersRequest;
 import dev.hazoe.quizservice.quiz.dto.response.QuestionSummaryResponse;
 import dev.hazoe.quizservice.quiz.dto.response.ValidateAnswersResponse;
+import dev.hazoe.quizservice.quiz.feign.fallback.QuestionClientFallback;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-@FeignClient("QUESTION-SERVICE")
+@FeignClient(
+        name = "QUESTION-SERVICE",
+        fallback = QuestionClientFallback.class
+)
 public interface QuestionClient {
 
     @PostMapping("/api/questions/random")
