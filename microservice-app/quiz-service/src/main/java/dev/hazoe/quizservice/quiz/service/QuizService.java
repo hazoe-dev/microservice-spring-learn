@@ -11,7 +11,9 @@ import dev.hazoe.quizservice.quiz.dto.response.QuizResultResponse;
 import dev.hazoe.quizservice.quiz.dto.response.ValidateAnswersResponse;
 import dev.hazoe.quizservice.quiz.feign.QuestionClient;
 import dev.hazoe.quizservice.quiz.repository.QuizRepo;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +24,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class QuizService {
 
     public static final String QUIZ_NOT_FOUND_WITH_ID = "Quiz not found with id: ";
@@ -58,6 +61,7 @@ public class QuizService {
                 );
     }
 
+    @CircuitBreaker( name = "questionService", fallbackMethod = "getQuestionsFallback" )
     public List<QuizQuestionResponse> getQuestionsByQuizId(Long quizId) {
         Quiz quiz = getQuizById(quizId);
 
@@ -68,16 +72,7 @@ public class QuizService {
         List<QuestionSummaryResponse> questions =
                 questionClient.getQuestionsByIds(quiz.getQuestionIds());
 
-        Map<Long, QuestionSummaryResponse> map =
-                questions.stream()
-                        .collect(Collectors.toMap(
-                                QuestionSummaryResponse::id,
-                                Function.identity()
-                        ));
-
         return questions.stream()
-                .map(map::get)
-                .filter(Objects::nonNull)
                 .map(q -> new QuizQuestionResponse(
                         q.id(),
                         q.title(),
@@ -85,6 +80,15 @@ public class QuizService {
                         q.level()
                 ))
                 .toList();
+    }
+
+    public List<QuizQuestionResponse> getQuestionsFallback(
+            Long quizId,
+            Throwable ex
+    ) {
+        log.error("Question service failed: {}", ex);
+
+        return Collections.emptyList();
     }
 
     public QuizResultResponse submitQuiz(Long quizId, ValidateAnswersRequest request) {
