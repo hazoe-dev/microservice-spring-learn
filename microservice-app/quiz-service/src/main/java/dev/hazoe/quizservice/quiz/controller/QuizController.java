@@ -7,7 +7,7 @@ import dev.hazoe.quizservice.quiz.dto.response.QuizQuestionResponse;
 import dev.hazoe.quizservice.quiz.dto.response.QuizResultResponse;
 import dev.hazoe.quizservice.quiz.service.QuizService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,14 +16,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("api/quizzes")
+@RequiredArgsConstructor
 public class QuizController {
 
-    private QuizService quizService;
-
-    @Autowired
-    public QuizController(QuizService quizService) {
-        this.quizService = quizService;
-    }
+    private final QuizService quizService;
 
     @GetMapping("/{id}")
     public ResponseEntity<Quiz> getQuizById(@PathVariable Long id) {

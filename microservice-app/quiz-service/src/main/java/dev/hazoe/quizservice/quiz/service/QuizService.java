@@ -14,12 +14,14 @@ import dev.hazoe.quizservice.quiz.repository.QuizRepo;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +35,23 @@ public class QuizService {
 
     private final QuestionClient questionClient;
 
+    private final RestTemplate restTemplate;
+
+    public List<QuestionSummaryResponse> getQuestionsByIds(List<Long> ids) {
+
+        String url = "http://QUESTION-SERVICE/api/questions/by-ids?ids={ids}";
+
+        ResponseEntity<List<QuestionSummaryResponse>> response =
+                restTemplate.exchange(
+                        url,
+                        HttpMethod.GET,
+                        null,
+                        new ParameterizedTypeReference<>() {},
+                        String.join(",", ids.stream().map(String::valueOf).toList())
+                );
+
+        return response.getBody();
+    }
 
     @Transactional
     public Quiz createQuiz(CreatedQuizRequest request) {
