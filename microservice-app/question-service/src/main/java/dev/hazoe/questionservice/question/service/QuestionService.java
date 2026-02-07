@@ -9,6 +9,8 @@ import dev.hazoe.questionservice.question.dto.response.ValidateAnswersResponse;
 import dev.hazoe.questionservice.question.repository.QuestionRepo;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -22,8 +24,11 @@ import java.util.stream.Collectors;
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
+@Slf4j
 public class QuestionService {
     private final QuestionRepo questionRepo;
+
+    private final Environment environment;
 
     public Page<Question> getAllQuestions(Pageable pageable) {
         return questionRepo.findAll(pageable);
@@ -120,6 +125,8 @@ public class QuestionService {
 
     @Transactional //QuestionCommandService
     public ValidateAnswersResponse validateAnswers(ValidateAnswersRequest request) {
+        log.info("Environment: {} ", environment.getProperty("local.server.port"));
+
         Map<Long, Integer> submitted = request.answers().stream()
                 .collect(Collectors.toMap(
                         ValidateAnswersRequest.AnswerRequest::questionId,
