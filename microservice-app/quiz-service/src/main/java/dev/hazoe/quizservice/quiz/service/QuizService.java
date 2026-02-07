@@ -3,18 +3,21 @@ package dev.hazoe.quizservice.quiz.service;
 import dev.hazoe.quizservice.exception.ResourceNotFoundException;
 import dev.hazoe.quizservice.quiz.domain.Quiz;
 import dev.hazoe.quizservice.quiz.dto.request.CreatedQuizRequest;
+import dev.hazoe.quizservice.quiz.dto.request.RandomQuestionRequest;
 import dev.hazoe.quizservice.quiz.dto.request.ValidateAnswersRequest;
 import dev.hazoe.quizservice.quiz.dto.response.QuestionSummaryResponse;
 import dev.hazoe.quizservice.quiz.dto.response.QuizQuestionResponse;
 import dev.hazoe.quizservice.quiz.dto.response.QuizResultResponse;
 import dev.hazoe.quizservice.quiz.dto.response.ValidateAnswersResponse;
-import dev.hazoe.quizservice.quiz.repository.QuestionClient;
+import dev.hazoe.quizservice.quiz.feign.QuestionClient;
 import dev.hazoe.quizservice.quiz.repository.QuizRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -35,9 +38,10 @@ public class QuizService {
 
         List<QuestionSummaryResponse> questions =
                 questionClient.getRandomQuestions(
-                        request.category(),
-                        request.numOfQuestion()
-                );
+                                new RandomQuestionRequest(
+                                        request.category(),
+                                        request.numOfQuestion())
+                        );
         List<Long> questionIds = questions.stream()
                 .map(QuestionSummaryResponse::id)
                 .toList();
@@ -56,11 +60,24 @@ public class QuizService {
 
     public List<QuizQuestionResponse> getQuestionsByQuizId(Long quizId) {
         Quiz quiz = getQuizById(quizId);
+
+        if (quiz.getQuestionIds().isEmpty()) {
+            return List.of();
+        }
+
         List<QuestionSummaryResponse> questions =
-                questionClient.getQuestionsByIds(
-                        quiz.getQuestionIds()
-                );
+                questionClient.getQuestionsByIds(quiz.getQuestionIds());
+
+        Map<Long, QuestionSummaryResponse> map =
+                questions.stream()
+                        .collect(Collectors.toMap(
+                                QuestionSummaryResponse::id,
+                                Function.identity()
+                        ));
+
         return questions.stream()
+                .map(map::get)
+                .filter(Objects::nonNull)
                 .map(q -> new QuizQuestionResponse(
                         q.id(),
                         q.title(),
@@ -74,10 +91,10 @@ public class QuizService {
         Quiz quiz = getQuizById(quizId);
         ValidateAnswersResponse validation =
                 questionClient.validateAnswers(
-                        new ValidateAnswersRequest(
-                                request.answers()
-                        )
-                );
+                                new ValidateAnswersRequest(
+                                        request.answers()
+                                )
+                        );
 
         int total = quiz.getQuestionIds().size();
         int correct = validation.correct();

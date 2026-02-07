@@ -15,7 +15,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("api")
+@RequestMapping("api/quizzes")
 public class QuizController {
 
     private QuizService quizService;
@@ -25,12 +25,12 @@ public class QuizController {
         this.quizService = quizService;
     }
 
-    @GetMapping("quizzes/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<Quiz> getQuizById(@PathVariable Long id) {
         return ResponseEntity.ok(quizService.getQuizById(id));
     }
 
-    @PostMapping("quizzes")
+    @PostMapping
     public ResponseEntity<Void> createQuiz(
             @Valid @RequestBody CreatedQuizRequest request) {
         Quiz q = quizService.createQuiz(request);
@@ -38,13 +38,13 @@ public class QuizController {
         return ResponseEntity.created(location).build();
     }
 
-    @GetMapping("quizzes/{id}/questions")
+    @GetMapping("/{id}/questions")
     public ResponseEntity<List<QuizQuestionResponse>> getQuestionsByQuizId(
             @PathVariable Long id) {
         return ResponseEntity.ok(quizService.getQuestionsByQuizId(id));
     }
 
-    @PostMapping("quizzes/{id}/submit") //REST pragmatic / task-oriented
+    @PostMapping("/{id}/submit") //REST pragmatic / task-oriented
     public ResponseEntity<QuizResultResponse> submitQuiz(
             @PathVariable Long id,
             @Valid @RequestBody ValidateAnswersRequest request) {
