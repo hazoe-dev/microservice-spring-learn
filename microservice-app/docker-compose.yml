@@ -1,0 +1,115 @@
+version: '3.8'
+
+services:
+
+  # =========================
+  # EUREKA SERVER
+  # =========================
+  eureka-server:
+    build: ./service-registry
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+    networks:
+      - micro-net
+
+  # =========================
+  # API GATEWAY
+  # =========================
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "8765:8765"
+    depends_on:
+      - eureka-server
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_URL}
+    networks:
+      - micro-net
+
+  # =========================
+  # QUIZ SERVICE
+  # =========================
+  quiz-service:
+    build: ./quiz-service
+    ports:
+      - "8090:8090"
+    depends_on:
+      - postgres-quiz
+      - eureka-server
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_URL}
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://${QUIZ_DB_HOST}:${QUIZ_DB_PORT}/${QUIZ_DB_NAME}
+      - SPRING_DATASOURCE_USERNAME=${QUIZ_DB_USER}
+      - SPRING_DATASOURCE_PASSWORD=${QUIZ_DB_PASSWORD}
+    networks:
+      - micro-net
+
+  # =========================
+  # QUESTION SERVICE
+  # =========================
+  question-service:
+    build: ./question-service
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres-question
+      - eureka-server
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_URL}
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://${QUESTION_DB_HOST}:${QUESTION_DB_PORT}/${QUESTION_DB_NAME}
+      - SPRING_DATASOURCE_USERNAME=${QUESTION_DB_USER}
+      - SPRING_DATASOURCE_PASSWORD=${QUESTION_DB_PASSWORD}
+    networks:
+      - micro-net
+
+  # =========================
+  # POSTGRES - QUIZ
+  # =========================
+  postgres-quiz:
+    image: postgres:16
+    container_name: postgres-quiz
+    environment:
+      POSTGRES_DB: ${QUIZ_DB_NAME}
+      POSTGRES_USER: ${QUIZ_DB_USER}
+      POSTGRES_PASSWORD: ${QUIZ_DB_PASSWORD}
+    volumes:
+      - pgdata-quiz:/var/lib/postgresql/data
+    networks:
+      - micro-net
+
+  # =========================
+  # POSTGRES - QUESTION
+  # =========================
+  postgres-question:
+    image: postgres:16
+    container_name: postgres-question
+    environment:
+      POSTGRES_DB: ${QUESTION_DB_NAME}
+      POSTGRES_USER: ${QUESTION_DB_USER}
+      POSTGRES_PASSWORD: ${QUESTION_DB_PASSWORD}
+    volumes:
+      - pgdata-question:/var/lib/postgresql/data
+    networks:
+      - micro-net
+
+
+# =========================
+# NETWORK
+# =========================
+networks:
+  micro-net:
+    driver: bridge
+
+# =========================
+# VOLUMES
+# =========================
+volumes:
+  pgdata-quiz:
+  pgdata-question:
