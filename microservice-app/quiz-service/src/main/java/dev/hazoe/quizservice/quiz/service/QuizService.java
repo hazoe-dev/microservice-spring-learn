@@ -12,6 +12,7 @@ import dev.hazoe.quizservice.quiz.dto.response.ValidateAnswersResponse;
 import dev.hazoe.quizservice.quiz.feign.QuestionClient;
 import dev.hazoe.quizservice.quiz.repository.QuizRepo;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
@@ -80,6 +81,7 @@ public class QuizService {
                 );
     }
 
+    @Retry(name = "questionService")
     @CircuitBreaker( name = "questionService", fallbackMethod = "getQuestionsFallback" )
     public List<QuizQuestionResponse> getQuestionsByQuizId(Long quizId) {
         Quiz quiz = getQuizById(quizId);
