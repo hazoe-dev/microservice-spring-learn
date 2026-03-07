@@ -11,8 +11,6 @@ import dev.hazoe.quizservice.quiz.dto.response.QuizResultResponse;
 import dev.hazoe.quizservice.quiz.dto.response.ValidateAnswersResponse;
 import dev.hazoe.quizservice.quiz.feign.QuestionClient;
 import dev.hazoe.quizservice.quiz.repository.QuizRepo;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
@@ -23,10 +21,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 @Slf4j
 public class QuizService {
 
@@ -38,6 +36,9 @@ public class QuizService {
 
     private final RestTemplate restTemplate;
 
+    private final QuestionAsyncService questionAsyncService;
+
+    @Transactional(readOnly = true)
     public List<QuestionSummaryResponse> getQuestionsByIds(List<Long> ids) {
 
         String url = "http://QUESTION-SERVICE/api/questions/by-ids?ids={ids}";
@@ -47,7 +48,8 @@ public class QuizService {
                         url,
                         HttpMethod.GET,
                         null,
-                        new ParameterizedTypeReference<>() {},
+                        new ParameterizedTypeReference<>() {
+                        },
                         String.join(",", ids.stream().map(String::valueOf).toList())
                 );
 
@@ -61,10 +63,10 @@ public class QuizService {
 
         List<QuestionSummaryResponse> questions =
                 questionClient.getRandomQuestions(
-                                new RandomQuestionRequest(
-                                        request.category(),
-                                        request.numOfQuestion())
-                        );
+                        new RandomQuestionRequest(
+                                request.category(),
+                                request.numOfQuestion())
+                );
         List<Long> questionIds = questions.stream()
                 .map(QuestionSummaryResponse::id)
                 .toList();
@@ -74,6 +76,7 @@ public class QuizService {
         return quizRepo.save(quiz);
     }
 
+    @Transactional(readOnly = true)
     public Quiz getQuizById(Long id) {
         return quizRepo.findById(id)
                 .orElseThrow(() ->
@@ -81,45 +84,28 @@ public class QuizService {
                 );
     }
 
-    @Retry(name = "questionService")
-    @CircuitBreaker( name = "questionService", fallbackMethod = "getQuestionsFallback" )
-    public List<QuizQuestionResponse> getQuestionsByQuizId(Long quizId) {
+    public CompletableFuture<List<QuizQuestionResponse>> getQuestionsByQuizId(Long quizId) {
+
+        List<Long> questionIds = getQuestionIds(quizId); //self call but OK because quizRepo.findById(id) has its transactional
+
+        return questionAsyncService.getQuestionsAsync(questionIds); //  go through proxy
+    }
+
+    @Transactional(readOnly = true)
+    public List<Long> getQuestionIds(Long quizId) {
         Quiz quiz = getQuizById(quizId);
-
-        if (quiz.getQuestionIds().isEmpty()) {
-            return List.of();
-        }
-
-        List<QuestionSummaryResponse> questions =
-                questionClient.getQuestionsByIds(quiz.getQuestionIds());
-
-        return questions.stream()
-                .map(q -> new QuizQuestionResponse(
-                        q.id(),
-                        q.title(),
-                        q.options(),
-                        q.level()
-                ))
-                .toList();
+        return new ArrayList<>(quiz.getQuestionIds());
     }
 
-    public List<QuizQuestionResponse> getQuestionsFallback(
-            Long quizId,
-            Throwable ex
-    ) {
-        log.error("Question service failed: {}", ex);
-
-        return Collections.emptyList();
-    }
-
+    @Transactional(readOnly = true)
     public QuizResultResponse submitQuiz(Long quizId, ValidateAnswersRequest request) {
         Quiz quiz = getQuizById(quizId);
         ValidateAnswersResponse validation =
                 questionClient.validateAnswers(
-                                new ValidateAnswersRequest(
-                                        request.answers()
-                                )
-                        );
+                        new ValidateAnswersRequest(
+                                request.answers()
+                        )
+                );
 
         int total = quiz.getQuestionIds().size();
         int correct = validation.correct();
