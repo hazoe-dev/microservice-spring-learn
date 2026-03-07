@@ -97,6 +97,15 @@ public class QuestionController {
     public ResponseEntity<List<QuestionSummaryResponse>> getQuestionsByIds(
             @RequestParam List<Long> ids
     ) {
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        if (Math.random() < 0.7) {   // 70% failure
+            throw new RuntimeException("Simulated failure");
+        }
+
         List<QuestionSummaryResponse> result =
                 questionService.getQuestionsByIds(ids);
 
