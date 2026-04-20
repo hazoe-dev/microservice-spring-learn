@@ -15,9 +15,10 @@
 6. [Phase 4 — First Deployment](#phase-4--first-deployment)
 7. [Day-to-Day Workflow](#day-to-day-workflow)
 8. [Verification Checklist](#verification-checklist)
-9. [Troubleshooting](#troubleshooting)
-10. [Teardown — Remove All Resources](#teardown--remove-all-resources)
-11. [Architecture Diagram](#architecture-diagram)
+9. [Test API After Deployment](#test-api-after-deployment)
+10. [Troubleshooting](#troubleshooting)
+11. [Teardown — Remove All Resources](#teardown--remove-all-resources)
+12. [Architecture Diagram](#architecture-diagram)
 
 ---
 
@@ -334,7 +335,7 @@ export EUREKA_TG_ARN=$(aws elbv2 create-target-group \
   --port 8761 \
   --vpc-id $VPC_ID \
   --target-type ip \
-  --health-check-path /actuator/health \
+  --health-check-path / \
   --query "TargetGroups[0].TargetGroupArn" --output text)
 
 # Add listener
@@ -372,7 +373,7 @@ export GW_TG_ARN=$(aws elbv2 create-target-group \
   --port 8765 \
   --vpc-id $VPC_ID \
   --target-type ip \
-  --health-check-path /actuator/health \
+  --health-check-path /actuator \
   --query "TargetGroups[0].TargetGroupArn" --output text)
 
 # Add listener
@@ -598,6 +599,43 @@ After a successful CD run, verify end-to-end:
 
 ---
 
+## Test API After Deployment
+
+After CD pipeline completes and all ECS tasks are `RUNNING`:
+
+### Get the public URL
+```bash
+echo $GW_ALB_DNS
+# Or if the variable is lost:
+aws elbv2 describe-load-balancers \
+  --query "LoadBalancers[?LoadBalancerName=='api-gateway-alb'].DNSName" \
+  --output text
+```
+
+### Call the APIs
+```bash
+# Health check
+curl http://$GW_ALB_DNS/actuator/health
+
+# Question service
+curl http://$GW_ALB_DNS/api/questions/all
+
+# Quiz service
+curl http://$GW_ALB_DNS/api/quizzes/all
+```
+
+> Getting `[]` with no data is normal — as long as there is no `502 Bad Gateway` or `Connection refused`.
+
+### If you get 502
+The ECS task is not healthy yet — check the logs:
+```bash
+aws logs tail /ecs/api-gateway --follow
+aws logs tail /ecs/question-service --follow
+aws logs tail /ecs/quiz-service --follow
+```
+
+---
+
 ## Troubleshooting
 
 ### Workflow fails at "Build and push"
@@ -621,6 +659,18 @@ After a successful CD run, verify end-to-end:
 - Default timeout is 10 minutes. Spring Boot 4 with Java 25 may need up to 90s to start
 - Increase the `startPeriod` in the task definition `healthCheck` to `120`
 - Check the container's CloudWatch logs for startup errors
+
+### Eureka ALB health check fails (service-registry crash-loops)
+- Symptom: `service-registry` shows `running: 0, pending: 2` and api-gateway logs show `503` from Eureka
+- Cause: Eureka's `/actuator/health` returns 503 in self-preservation mode (AWS ALB only accepts 200-499)
+- Fix: change the Eureka target group health check path to `/` (the Eureka dashboard always returns 200):
+  ```bash
+  MSYS_NO_PATHCONV=1 aws elbv2 modify-target-group \
+    --target-group-arn $(aws elbv2 describe-target-groups \
+      --names eureka-tg \
+      --query "TargetGroups[0].TargetGroupArn" --output text) \
+    --health-check-path /
+  ```
 
 ### RDS connection refused
 - Confirm the RDS security group allows port 5432 from the ECS security group
