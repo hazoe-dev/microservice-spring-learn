@@ -33,12 +33,12 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-${{ matrix.service }}-${{ hashFiles(format('{0}/build.gradle', matrix.service), format('{0}/settings.gradle', matrix.service)) }}
+          key: gradle-${{ matrix.service }}-${{ hashFiles(format('microservice-app/{0}/build.gradle', matrix.service), format('microservice-app/{0}/settings.gradle', matrix.service)) }}
           restore-keys: gradle-${{ matrix.service }}-
 
       - name: Make gradlew executable
-        run: chmod +x ${{ matrix.service }}/gradlew
+        run: chmod +x microservice-app/${{ matrix.service }}/gradlew
 
       - name: Run tests
-        working-directory: ${{ matrix.service }}
+        working-directory: microservice-app/${{ matrix.service }}
         run: ./gradlew test --no-daemon
