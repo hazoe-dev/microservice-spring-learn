@@ -8,7 +8,7 @@
   "containerDefinitions": [
     {
       "name": "quiz-service",
-      "image": "tttha/quiz-service:latest",
+      "image": "298846027060.dkr.ecr.ap-southeast-1.amazonaws.com/quiz-service:latest",
       "essential": true,
       "portMappings": [
         {
@@ -40,9 +40,6 @@
           "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:298846027060:secret:quiz-db-password"
         }
       ],
-      "repositoryCredentials": {
-        "credentialsParameter": "arn:aws:secretsmanager:ap-southeast-1:298846027060:secret:dockerhub-creds"
-      },
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {

@@ -1,5 +1,5 @@
 # -------- Stage 1: Build --------
-FROM eclipse-temurin:25-jdk AS builder
+FROM public.ecr.aws/amazoncorretto/amazoncorretto:25 AS builder
 
 WORKDIR /app
 
@@ -22,7 +22,7 @@ RUN ./gradlew bootJar -x test --no-daemon
 
 
 # -------- Stage 2: Runtime --------
-FROM eclipse-temurin:25-jdk
+FROM public.ecr.aws/amazoncorretto/amazoncorretto:25
 
 WORKDIR /app
 

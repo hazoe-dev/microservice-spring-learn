@@ -8,7 +8,7 @@
   "containerDefinitions": [
     {
       "name": "service-registry",
-      "image": "tttha/service-registry:latest",
+      "image": "298846027060.dkr.ecr.ap-southeast-1.amazonaws.com/service-registry:latest",
       "essential": true,
       "portMappings": [
         {
@@ -22,9 +22,6 @@
           "value": "prod"
         }
       ],
-      "repositoryCredentials": {
-        "credentialsParameter": "arn:aws:secretsmanager:ap-southeast-1:298846027060:secret:dockerhub-creds"
-      },
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {

@@ -8,7 +8,7 @@
   "containerDefinitions": [
     {
       "name": "question-service",
-      "image": "tttha/question-service:latest",
+      "image": "298846027060.dkr.ecr.ap-southeast-1.amazonaws.com/question-service:latest",
       "essential": true,
       "portMappings": [
         {
@@ -40,9 +40,6 @@
           "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:298846027060:secret:question-db-password"
         }
       ],
-      "repositoryCredentials": {
-        "credentialsParameter": "arn:aws:secretsmanager:ap-southeast-1:298846027060:secret:dockerhub-creds"
-      },
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {

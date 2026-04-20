@@ -8,7 +8,7 @@
   "containerDefinitions": [
     {
       "name": "api-gateway",
-      "image": "tttha/api-gateway:latest",
+      "image": "298846027060.dkr.ecr.ap-southeast-1.amazonaws.com/api-gateway:latest",
       "essential": true,
       "portMappings": [
         {
@@ -26,9 +26,6 @@
           "value": "http://internal-eureka-internal-alb-321892685.ap-southeast-1.elb.amazonaws.com:8761/eureka/"
         }
       ],
-      "repositoryCredentials": {
-        "credentialsParameter": "arn:aws:secretsmanager:ap-southeast-1:298846027060:secret:dockerhub-creds"
-      },
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
