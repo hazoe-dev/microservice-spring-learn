@@ -4,11 +4,11 @@
   "requiresCompatibilities": ["FARGATE"],
   "cpu": "512",
   "memory": "1024",
-  "executionRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskExecutionRole",
+  "executionRoleArn": "arn:aws:iam::298846027060:role/ecsTaskExecutionRole",
   "containerDefinitions": [
     {
       "name": "service-registry",
-      "image": "hazoe-dev/service-registry:latest",
+      "image": "tttha/service-registry:latest",
       "essential": true,
       "portMappings": [
         {
@@ -23,13 +23,13 @@
         }
       ],
       "repositoryCredentials": {
-        "credentialsParameter": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:dockerhub-creds"
+        "credentialsParameter": "arn:aws:secretsmanager:ap-southeast-1:298846027060:secret:dockerhub-creds"
       },
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
           "awslogs-group": "/ecs/service-registry",
-          "awslogs-region": "REGION",
+          "awslogs-region": "ap-southeast-1",
           "awslogs-stream-prefix": "ecs"
         }
       },

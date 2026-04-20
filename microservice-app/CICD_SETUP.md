@@ -288,7 +288,10 @@ for service in service-registry api-gateway question-service quiz-service; do
   echo "Created log group: /ecs/$service"
 done
 ```
-
+> In case you meet parsing path:
+> ```bash
+> export MSYS_NO_PATHCONV=1
+> ```
 ---
 
 ### 1.8 Create the ECS Cluster
@@ -387,19 +390,19 @@ aws elbv2 create-listener \
 Before ECS services can be created, the task definitions need to exist. First, update the placeholder values in your JSON files (see [Phase 3](#phase-3--update-task-definition-placeholders)), then register them:
 
 ```bash
-REPO_ROOT="path/to/microservice-app"
+REPO_ROOT="path/to/microservice-learn"
 
 aws ecs register-task-definition \
-  --cli-input-json file://$REPO_ROOT/.github/ecs/service-registry-task-def.json
+  --cli-input-json "file://$REPO_ROOT/.github/ecs/service-registry-task-def.json"
 
 aws ecs register-task-definition \
-  --cli-input-json file://$REPO_ROOT/.github/ecs/api-gateway-task-def.json
+  --cli-input-json "file://$REPO_ROOT/.github/ecs/api-gateway-task-def.json"
 
 aws ecs register-task-definition \
-  --cli-input-json file://$REPO_ROOT/.github/ecs/question-service-task-def.json
+  --cli-input-json "file://$REPO_ROOT/.github/ecs/question-service-task-def.json"
 
 aws ecs register-task-definition \
-  --cli-input-json file://$REPO_ROOT/.github/ecs/quiz-service-task-def.json
+  --cli-input-json "file://$REPO_ROOT/.github/ecs/quiz-service-task-def.json"
 ```
 
 ---

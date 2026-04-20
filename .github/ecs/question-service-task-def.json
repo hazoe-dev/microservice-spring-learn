@@ -4,11 +4,11 @@
   "requiresCompatibilities": ["FARGATE"],
   "cpu": "512",
   "memory": "1024",
-  "executionRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskExecutionRole",
+  "executionRoleArn": "arn:aws:iam::298846027060:role/ecsTaskExecutionRole",
   "containerDefinitions": [
     {
       "name": "question-service",
-      "image": "hazoe-dev/question-service:latest",
+      "image": "tttha/question-service:latest",
       "essential": true,
       "portMappings": [
         {
@@ -23,11 +23,11 @@
         },
         {
           "name": "EUREKA_CLIENT_SERVICEURL_DEFAULTZONE",
-          "value": "http://EUREKA_ALB_DNS:8761/eureka/"
+          "value": "http://internal-eureka-internal-alb-321892685.ap-southeast-1.elb.amazonaws.com:8761/eureka/"
         },
         {
           "name": "SPRING_DATASOURCE_URL",
-          "value": "jdbc:postgresql://QUESTION_RDS_ENDPOINT:5432/questiondb"
+          "value": "jdbc:postgresql://question-db.cve4ok6yafou.ap-southeast-1.rds.amazonaws.com:5432/questiondb"
         },
         {
           "name": "SPRING_DATASOURCE_USERNAME",
@@ -37,17 +37,17 @@
       "secrets": [
         {
           "name": "SPRING_DATASOURCE_PASSWORD",
-          "valueFrom": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:question-db-password"
+          "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:298846027060:secret:question-db-password"
         }
       ],
       "repositoryCredentials": {
-        "credentialsParameter": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:dockerhub-creds"
+        "credentialsParameter": "arn:aws:secretsmanager:ap-southeast-1:298846027060:secret:dockerhub-creds"
       },
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
           "awslogs-group": "/ecs/question-service",
-          "awslogs-region": "REGION",
+          "awslogs-region": "ap-southeast-1",
           "awslogs-stream-prefix": "ecs"
         }
       },

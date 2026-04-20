@@ -4,11 +4,11 @@
   "requiresCompatibilities": ["FARGATE"],
   "cpu": "512",
   "memory": "1024",
-  "executionRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskExecutionRole",
+  "executionRoleArn": "arn:aws:iam::298846027060:role/ecsTaskExecutionRole",
   "containerDefinitions": [
     {
       "name": "api-gateway",
-      "image": "hazoe-dev/api-gateway:latest",
+      "image": "tttha/api-gateway:latest",
       "essential": true,
       "portMappings": [
         {
@@ -23,17 +23,17 @@
         },
         {
           "name": "EUREKA_CLIENT_SERVICEURL_DEFAULTZONE",
-          "value": "http://EUREKA_ALB_DNS:8761/eureka/"
+          "value": "http://internal-eureka-internal-alb-321892685.ap-southeast-1.elb.amazonaws.com:8761/eureka/"
         }
       ],
       "repositoryCredentials": {
-        "credentialsParameter": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:dockerhub-creds"
+        "credentialsParameter": "arn:aws:secretsmanager:ap-southeast-1:298846027060:secret:dockerhub-creds"
       },
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
           "awslogs-group": "/ecs/api-gateway",
-          "awslogs-region": "REGION",
+          "awslogs-region": "ap-southeast-1",
           "awslogs-stream-prefix": "ecs"
         }
       },
