@@ -8,12 +8,14 @@ import dev.hazoe.quizservice.quiz.dto.response.QuizResultResponse;
 import dev.hazoe.quizservice.quiz.service.QuizService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
-
+import java.util.concurrent.CompletableFuture;
+@Slf4j
 @RestController
 @RequestMapping("api/quizzes")
 @RequiredArgsConstructor
@@ -35,9 +37,14 @@ public class QuizController {
     }
 
     @GetMapping("/{id}/questions")
-    public ResponseEntity<List<QuizQuestionResponse>> getQuestionsByQuizId(
+    public CompletableFuture<ResponseEntity<List<QuizQuestionResponse>>> getQuestionsByQuizId(
             @PathVariable Long id) {
-        return ResponseEntity.ok(quizService.getQuestionsByQuizId(id));
+        return quizService.getQuestionsByQuizId(id)
+                .thenApply(ResponseEntity::ok)
+                .exceptionally(ex -> {
+                    log.error("Failed to get quiz questions", ex);
+                    return ResponseEntity.internalServerError().build();
+                });
     }
 
     @PostMapping("/{id}/submit") //REST pragmatic / task-oriented

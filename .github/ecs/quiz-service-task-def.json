@@ -1,0 +1,63 @@
+{
+  "family": "quiz-service",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::298846027060:role/ecsTaskExecutionRole",
+  "containerDefinitions": [
+    {
+      "name": "quiz-service",
+      "image": "tttha/quiz-service:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 8090,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        {
+          "name": "SPRING_PROFILES_ACTIVE",
+          "value": "prod"
+        },
+        {
+          "name": "EUREKA_CLIENT_SERVICEURL_DEFAULTZONE",
+          "value": "http://internal-eureka-internal-alb-321892685.ap-southeast-1.elb.amazonaws.com:8761/eureka/"
+        },
+        {
+          "name": "SPRING_DATASOURCE_URL",
+          "value": "jdbc:postgresql://quiz-db.cve4ok6yafou.ap-southeast-1.rds.amazonaws.com:5432/quizdb"
+        },
+        {
+          "name": "SPRING_DATASOURCE_USERNAME",
+          "value": "quiz_user"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "SPRING_DATASOURCE_PASSWORD",
+          "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:298846027060:secret:quiz-db-password"
+        }
+      ],
+      "repositoryCredentials": {
+        "credentialsParameter": "arn:aws:secretsmanager:ap-southeast-1:298846027060:secret:dockerhub-creds"
+      },
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/quiz-service",
+          "awslogs-region": "ap-southeast-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": ["CMD-SHELL", "curl -f http://localhost:8090/actuator/health || exit 1"],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 60
+      }
+    }
+  ]
+}
