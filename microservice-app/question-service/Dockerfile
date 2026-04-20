@@ -29,6 +29,6 @@ WORKDIR /app
 # Copy jar từ stage build
 COPY --from=builder /app/build/libs/*.jar app.jar
 
-EXPOSE 8090
+EXPOSE 8080
 
 ENTRYPOINT ["java","-XX:+UseContainerSupport","-XX:MaxRAMPercentage=75.0","-jar","app.jar"]
