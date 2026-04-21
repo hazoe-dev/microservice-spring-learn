@@ -619,13 +619,15 @@ After a successful CD run, verify end-to-end:
   curl http://$GW_ALB_DNS/api/questions/by-ids?ids=1,2,3
   curl -X POST http://$GW_ALB_DNS/api/quizzes \
   -H "Content-Type: application/json" \
-  -d '{"title": "My Quiz", "numOfQuestion": 5, "category": "Science"}'
+  -d '{"title": "My Quiz", "numOfQuestion": 5, "category": "database"}'
 
-  curl http://$GW_ALB_DNS/api/quizzes/all
+  curl http://$GW_ALB_DNS/api/quizzes
   ```
 
 - ```
-MSYS_NO_PATHCONV=1 aws logs tail /ecs/quiz-service --since 5m
+$ MSYS_NO_PATHCONV=1 aws logs tail /ecs/api-gateway --since 3m
+
+MSYS_NO_PATHCONV=1 aws logs tail /ecs/quiz-service --since 5m | grep -i "error\|exception\|eureka"
 
 ```
 ---
