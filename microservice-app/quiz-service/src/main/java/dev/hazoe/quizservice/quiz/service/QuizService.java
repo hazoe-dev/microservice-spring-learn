@@ -77,6 +77,11 @@ public class QuizService {
     }
 
     @Transactional(readOnly = true)
+    public List<Quiz> getAllQuizzes() {
+        return quizRepo.findAll();
+    }
+
+    @Transactional(readOnly = true)
     public Quiz getQuizById(Long id) {
         return quizRepo.findById(id)
                 .orElseThrow(() ->
