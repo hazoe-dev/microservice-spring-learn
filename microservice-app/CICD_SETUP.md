@@ -313,6 +313,15 @@ echo "ECS cluster created: microservice-cluster"
 Eureka (service-registry) needs a fixed hostname so api-gateway, quiz-service, and question-service can register with it.
 
 ```bash
+# Check again or create enviroment variables for ALBs
+export MSYS_NO_PATHCONV=1
+export VPC_ID=$(aws ec2 describe-vpcs --filters "Name=isDefault,Values=true" --query "Vpcs[0].VpcId" --output text)
+export SUBNET_IDS=$(aws ec2 describe-subnets --filters "Name=vpc-id,Values=$VPC_ID" --query "Subnets[*].SubnetId" --output text | tr '\t' ',')
+export SG_ECS=$(aws ec2 describe-security-groups --filters "Name=group-name,Values=microservice-ecs-sg" --query "SecurityGroups[0].GroupId" --output text)
+export SG_ALB=$(aws ec2 describe-security-groups --filters "Name=group-name,Values=microservice-alb-sg" --query "SecurityGroups[0].GroupId" --output text)
+```
+
+```bash
 # Create internal ALB
 export EUREKA_ALB_ARN=$(aws elbv2 create-load-balancer \
   --name eureka-internal-alb \
@@ -337,6 +346,12 @@ export EUREKA_TG_ARN=$(aws elbv2 create-target-group \
   --target-type ip \
   --health-check-path / \
   --query "TargetGroups[0].TargetGroupArn" --output text)
+
+# Get old Eureka TG ARN
+export EUREKA_TG_ARN=$(aws elbv2 describe-target-groups \
+  --names eureka-tg \
+  --query "TargetGroups[0].TargetGroupArn" --output text)
+echo "Eureka TG: $EUREKA_TG_ARN"
 
 # Add listener
 aws elbv2 create-listener \
@@ -375,6 +390,13 @@ export GW_TG_ARN=$(aws elbv2 create-target-group \
   --target-type ip \
   --health-check-path /actuator \
   --query "TargetGroups[0].TargetGroupArn" --output text)
+
+# Get existed API Gateway TG ARN  
+export GW_TG_ARN=$(aws elbv2 describe-target-groups \
+  --names api-gateway-tg \
+  --query "TargetGroups[0].TargetGroupArn" --output text)
+
+echo "GW TG: $GW_TG_ARN"
 
 # Add listener
 aws elbv2 create-listener \
@@ -593,10 +615,19 @@ After a successful CD run, verify end-to-end:
 - [ ] **Eureka Dashboard** — open `http://$EUREKA_ALB_DNS:8761` → confirm api-gateway, question-service, quiz-service are all registered
 - [ ] **API Gateway test:**
   ```bash
-  curl http://$GW_ALB_DNS/api/questions/all
+  curl http://$GW_ALB_DNS/api/questions
+  curl http://$GW_ALB_DNS/api/questions/by-ids?ids=1,2,3
+  curl -X POST http://$GW_ALB_DNS/api/quizzes \
+  -H "Content-Type: application/json" \
+  -d '{"title": "My Quiz", "numOfQuestion": 5, "category": "Science"}'
+
   curl http://$GW_ALB_DNS/api/quizzes/all
   ```
 
+- ```
+MSYS_NO_PATHCONV=1 aws logs tail /ecs/quiz-service --since 5m
+
+```
 ---
 
 ## Test API After Deployment
@@ -677,6 +708,18 @@ aws logs tail /ecs/quiz-service --follow
 - Confirm the RDS instance is in `available` state
 - Double-check the `SPRING_DATASOURCE_URL` endpoint hostname in the task definition
 
+### Temporarily suspended resources:
+- ECS services → set desired count = 0 (4 services)
+- RDS → Stop temporarily (both 2 instances)
+- ALB → Delete (both public + internal)
+- NAT Gateway → Delete
+
+```bash
+aws ecs update-service --cluster microservice-cluster --service service-registry --desired-count 0
+aws ecs update-service --cluster microservice-cluster --service api-gateway --desired-count 0
+aws ecs update-service --cluster microservice-cluster --service question-service --desired-count 0
+aws ecs update-service --cluster microservice-cluster --service quiz-service --desired-count 0
+```
 ---
 
 ## Teardown — Remove All Resources

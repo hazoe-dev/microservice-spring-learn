@@ -32,7 +32,7 @@ public class QuizController {
     public ResponseEntity<Void> createQuiz(
             @Valid @RequestBody CreatedQuizRequest request) {
         Quiz q = quizService.createQuiz(request);
-        URI location = URI.create("/api/quiz/" + q.getId());
+        URI location = URI.create("/api/quizzes/" + q.getId());
         return ResponseEntity.created(location).build();
     }
 

@@ -23,7 +23,7 @@
         },
         {
           "name": "EUREKA_CLIENT_SERVICEURL_DEFAULTZONE",
-          "value": "http://internal-eureka-internal-alb-321892685.ap-southeast-1.elb.amazonaws.com:8761/eureka/"
+          "value": "http://internal-eureka-internal-alb-300243313.ap-southeast-1.elb.amazonaws.com:8761/eureka/"
         },
         {
           "name": "SPRING_DATASOURCE_URL",
